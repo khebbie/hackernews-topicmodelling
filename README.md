@@ -1,4 +1,6 @@
-LDA
-===
+Topic modelling of hackernews
+=============================
 
-Generic LDA using gensim in Python
+This is based on https://github.com/albertmeronyo/LDA
+
+
