@@ -7,30 +7,33 @@ from gensim import corpora, models, similarities
 import nltk
 import argparse
 import csv
+import os
 
 class LDA():
-    def __init__(self, __logLevel, __infile, __topics):
+    def __init__(self, __logLevel, __topics):
         self.log = logging.getLogger('LDA')
         self.log.setLevel(__logLevel)
-        self.infile = __infile
         self.topics = __topics
         self.documents = []
 
         # 1. Load text file
-        self.readFile()
+        self.readFiles()
         self.log.debug(self.documents)
 
         # 2. Compute LDA
         self.computeLDA()
 
-        # 3. Serialize Turtle
+    def readFile(self, filename):
+        f = open(filename, 'r')
+        text = f.read()
+        print("file content:")
+        print(text)
+        self.documents.append(unicode(text, 'utf-8'))
 
-    def readFile(self):
-        with open(self.infile, 'r') as csvfile:
-            reader = csv.reader(csvfile, delimiter='\t', quotechar='"')
-            next(reader, None) # skip headers
-            for row in reader:
-                self.documents.append(unicode(row[1], 'utf-8'))
+
+    def readFiles(self):
+        for filename in os.listdir('./content'):
+            self.readFile('content/' + filename)
 
     def computeLDA(self):
         utf_stopwords = ['\u0xc2']
@@ -56,22 +59,19 @@ class LDA():
         corpus_tfidf = self.tfidf[self.corpus]
         self.log.debug(self.tfidf)
 
-        lda = models.ldamodel.LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.topics, update_every=1, chunksize=10000, passes=1)
+        lda = models.ldamodel.LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.topics, update_every=1, chunksize=10000, passes=20)
         lda.print_topics(10)
 
 if __name__ == "__main__":
     # Argument parsing
     parser = argparse.ArgumentParser(description="Simple LDA using gensim")
-    parser.add_argument('--infile', '-i',
-                        help = "Read corpus from file",
-                        required = True)
     parser.add_argument('--verbose', '-v',
-                        help = "Be verbose -- debug logging level",
-                        required = False, 
-                        action = 'store_true')
+            help = "Be verbose -- debug logging level",
+            required = False,
+            action = 'store_true')
     parser.add_argument('--topics', '-t',
-                        help = "Number of topics",
-                        required = True)
+            help = "Number of topics",
+            required = True)
     args = parser.parse_args()
 
     # Logging
@@ -82,6 +82,6 @@ if __name__ == "__main__":
     logging.info('Initializing...')
 
     # Instance
-    lda = LDA(logLevel, args.infile, int(args.topics))
+    lda = LDA(logLevel, int(args.topics))
 
     logging.info('Done.')
